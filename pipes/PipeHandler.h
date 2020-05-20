@@ -5,7 +5,7 @@
 namespace pipes{
     class PipeHandler {
         public:
-            PipeHandler(std::string app);
+            PipeHandler(const std::string& app);
             ~PipeHandler();
             bool CreatePipe();
             bool SendCommand();

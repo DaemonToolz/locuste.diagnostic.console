@@ -1,7 +1,7 @@
 #include "./PipeHandler.h"
 #include <string.h>
 using namespace pipes;
-PipeHandler::PipeHandler(std::string app){
+PipeHandler::PipeHandler(const std::string& app){
     this->_appName = app;
 }
 
