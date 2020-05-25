@@ -8,6 +8,7 @@ using namespace std;
 
 void displayBrainMenu();
 void displaySchedulerMenu();
+void displayMainMenu(); 
 
 typedef void (*pfunc)(void);
 map<string, pfunc> *menuFunction;
@@ -40,9 +41,13 @@ void deleteMenus(){
 }
 
 void displayBrainMenu(){
-
+    // 
 }
 
 void displaySchedulerMenu(){
+    //
+}
 
+void displayMainMenu(){
+    //
 }
