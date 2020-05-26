@@ -18,16 +18,20 @@ using namespace std;
 g++ -std=c++17 -Wall -c "locuste.system.connector.cpp"
 g++ -std=c++17 -lpthread -Wall -c "locuste.system.connector.cpp" 
 
-g++ -Wall -o  "locuste.system.connector" "locuste.system.connector.cpp"
-g++ -Wall -lpthread -o  "locuste.system.connector" "locuste.system.connector.cpp"
+g++ -std=c++17  -Wall -o  "locuste.system.connector" "locuste.system.connector.cpp"
+g++ -std=c++17  -Wall -lpthread -o  "locuste.system.connector" "locuste.system.connector.cpp"
 */
-void initMenus(); // Initialisation des menus
+void initMenus(); // 
+void selectMenu(); // 
+void displaySelectedMenu(); // 
+void displayFooter(); //
+void callCommand();
 void deleteMenus(); // Suppression des menus
-static void selectApp(); // Sélection du menu / app (A déplacer)
-static void refreshPID(); // Récupération de l'id du processus (A déplacer)
-static void initMaps(); // Initialisation des différentes maps (A déplacer)
-static void clear();
-static void displayMenu(); // Afficher le menu courant (A déplacer)
+void keyboardInput(); // Sélection du menu / app (A déplacer)
+void refreshPID(); // Récupération de l'id du processus (A déplacer)
+void initPipeMaps(); // Initialisation des différentes maps (A déplacer)
+void clear();
+void displayHeader(); // Afficher le menu courant (A déplacer)
 int getch();
 
 bool running = true;
@@ -37,14 +41,16 @@ map<string,CommunicationPipe> *locusteAppPipes;
 
 
 int main (int argc, const char * argv[]) {
-    initMaps();
+    initPipeMaps();
     initMenus();
-    future<void> future = async(selectApp);
+    future<void> future = async(keyboardInput);
     lastCommand = "";
     try {
         while(running){
             refreshPID();
-            displayMenu();
+            displayHeader();
+            displaySelectedMenu();
+            displayFooter();
             this_thread::sleep_for(chrono::milliseconds(100));
         }
     } catch (exception& ex) {
@@ -52,14 +58,13 @@ int main (int argc, const char * argv[]) {
         cout << ex.what() << endl;
     }
 
-    delete locusteApps;
     delete locusteAppPipes;
     deleteMenus();
 
     return 0;
 }
 
-static void initMaps(){
+void initPipeMaps(){
     locusteApps = new map<string,int>();
     locusteAppPipes = new map<string,CommunicationPipe>(); 
 
@@ -73,33 +78,38 @@ static void initMaps(){
     
 }
 
-static void refreshPID(){
+void refreshPID(){
     (*locusteApps)["locuste.service.brain"] = getProcIdByName("locuste.service.brain");
     (*locusteApps)["locuste.service.osm"] = getProcIdByName("locuste.service.osm");
     (*locusteApps)["locuste.drone.automata"] = getProcIdByName("locuste.drone.automata");
-    
 }
 
-static void clear() {
-    // CSI[2J clears screen, CSI[H moves the cursor to top-left corner
+void clear() {
     cout << "\x1B[2J\x1B[H";
 }
 
-static void displayMenu(){
+void displayHeader(){
     clear();
     cout << "Application de débuggage et diagnostic locuste.system.connector" << endl << endl;
-
     cout << "Touche entrée pour valider, Retour arrière pour supprimer la lettre" << endl;
     cout << "Saisie : " << lastCommand  << endl << endl;
-
-    cout << "Liste des applications LOCUSTE disponibles " << endl;
-    for (auto& elem : (*locusteApps)) {
-        cout << "[" << elem.first << "] - " << (elem.second > 0 ? " OK": " KO") << " ( " << (locusteAppPipes->find(elem.first) == locusteAppPipes->end()  ? "INDISPONIBLE" : "DISPONIBLE" )<< " ) " <<  endl;
-	}
-    cout << "Commandes disponibles pour ce menu: Diagnose [Application], Quit" << endl;
 }
 
-static void selectApp(){
+void displayFooter(){
+    cout << "Commandes disponibles pour ce menu : ";
+    for (auto& elem : (*availableCommands)[selectedMenuName]) {
+        cout << elem.first << " ";
+	}
+    cout << endl << endl;
+
+    cout << "Menu : ";
+    for (auto& elem : (*menuFunction)) {
+        cout << (elem.first == selectedMenuName ? "[" : "") << elem.first << (elem.first == selectedMenuName ? "] " : " ");
+	}
+    cout << endl;
+}
+
+void keyboardInput(){
     char lastChar; 
     while(running){
         lastChar = getch();
@@ -113,14 +123,8 @@ static void selectApp(){
                 lastCommand.pop_back();
             }
         } else if(lastChar == '\r' || lastChar == '\n' ){
-            if(lastCommand == "Quit"){
-                running = false;
-            }
-
-            if(lastCommand.rfind("Diagnose", 0) == 0){
-                // Changer de menu, à déplacer dans menus.cpp
-            }
-      
+            callCommand();
+            lastCommand = "";
         } else {
             lastCommand.push_back(lastChar);
         }
