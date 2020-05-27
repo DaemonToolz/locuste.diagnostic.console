@@ -6,6 +6,7 @@
 #include <thread>  
 #include <chrono> 
 #include <future>
+#include <mutex>
 #include "./models.h"
 #include "./globals.h"
 #include "./menus.cpp"
@@ -38,7 +39,7 @@ bool running = true;
 string lastCommand;
 map<string,int> *locusteApps;
 map<string,CommunicationPipe> *locusteAppPipes;
-
+mutex pid_lock;
 
 int main (int argc, const char * argv[]) {
     initPipeMaps();
@@ -58,30 +59,38 @@ int main (int argc, const char * argv[]) {
         cout << ex.what() << endl;
     }
 
-    delete locusteAppPipes;
+    cout << "Arrêt en cours " << endl;
     deleteMenus();
-
+    cout << "Menus supprimés " << endl;
+    delete locusteAppPipes;
+    cout << "Pipes supprimées " << endl;
+    delete screenContent;
+    cout << "Journaux vidés " << endl;
     return 0;
 }
 
 void initPipeMaps(){
     locusteApps = new map<string,int>();
     locusteAppPipes = new map<string,CommunicationPipe>(); 
-
+    screenContent = new vector<string>();
     (*locusteAppPipes)["locuste.service.brain"] = CommunicationPipe();
-    (*locusteAppPipes)["locuste.service.brain"].inputPipe =  "locuste.diagnostic.brain";
-    (*locusteAppPipes)["locuste.service.brain"].outputPipe =  "locuste.brain.diagnostic";
+    (*locusteAppPipes)["locuste.service.brain"].inputPipe =  "/tmp/locuste.diagnostic.brain";
+    (*locusteAppPipes)["locuste.service.brain"].outputPipe =  "/tmp/locuste.brain.diagnostic";
     
     (*locusteAppPipes)["locuste.service.osm"] = CommunicationPipe();
-    (*locusteAppPipes)["locuste.service.osm"].inputPipe =  "locuste.diagnostic.scheduler";
-    (*locusteAppPipes)["locuste.service.osm"].outputPipe =  "locuste.scheduler.diagnostic";
+    (*locusteAppPipes)["locuste.service.osm"].inputPipe =  "/tmp/locuste.diagnostic.scheduler";
+    (*locusteAppPipes)["locuste.service.osm"].outputPipe =  "/tmp/locuste.scheduler.diagnostic";
     
 }
 
 void refreshPID(){
-    (*locusteApps)["locuste.service.brain"] = getProcIdByName("locuste.service.brain");
-    (*locusteApps)["locuste.service.osm"] = getProcIdByName("locuste.service.osm");
-    (*locusteApps)["locuste.drone.automata"] = getProcIdByName("locuste.drone.automata");
+    pid_lock.lock();
+    if(locusteApps != nullptr){
+        (*locusteApps)["locuste.service.brain"] = getProcIdByName("locuste.service.brain");
+        (*locusteApps)["locuste.service.osm"] = getProcIdByName("locuste.service.osm");
+        (*locusteApps)["locuste.drone.automata"] = getProcIdByName("locuste.drone.automata");
+    }
+    pid_lock.unlock();
 }
 
 void clear() {
@@ -98,7 +107,7 @@ void displayHeader(){
 void displayFooter(){
     cout << "Commandes disponibles pour ce menu : ";
     for (auto& elem : (*availableCommands)[selectedMenuName]) {
-        cout << elem.first << " ";
+        cout << "[" << elem.first << "] ";
 	}
     cout << endl << endl;
 
@@ -114,7 +123,7 @@ void keyboardInput(){
     while(running){
         lastChar = getch();
         
-        if(lastChar == '\t') {
+        if(lastChar < 32 && lastChar > 127) {
             continue;
         }
 
