@@ -7,6 +7,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <climits>
 
 using namespace std;
 
@@ -24,7 +25,7 @@ int getProcIdByName(const string& procName)
         {
             // Skip non-numeric entries
             int id = atoi(dirp->d_name);
-            if (id > 0)
+            if (id > 0 && id < INT_MAX)
             {
                 // Read contents of virtual /proc/{pid}/cmdline file
                 string cmdPath = string("/proc/") + dirp->d_name + "/cmdline";

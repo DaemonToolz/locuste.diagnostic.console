@@ -6,12 +6,15 @@
 #include <map>
 #include <sstream>
 #include <iterator>
+#include <algorithm>
+#include <regex>
 #include "./globals.h"
 #include "./pipes/PipeHandler.h"
 using namespace std; 
 using namespace pipes;
 
-
+void close_pipe();
+void help();
 void displayBrainMenu();
 void displaySchedulerMenu();
 void displayMainMenu(); 
@@ -24,8 +27,10 @@ typedef void (*pfunc)(void);
 map<string, pfunc> *menuFunction;
 string selectedMenuName = "main";
 map<string,map<string, pfunc>> *availableCommands;
+map<string,string> *helpMenu;
 
 PipeHandler* DiagnosticPipe; 
+
 
 int getch(void){
   struct termios oldt,newt;
@@ -39,8 +44,13 @@ int getch(void){
   return ch;
 }
 
-//void selectMenus(const CommunicationPipe& pipes);
-
+std::vector<std::string> split(const string& input, const string& regex) {
+    std::regex re(regex);
+    std::sregex_token_iterator
+        first{input.begin(), input.end(), re, -1},
+        last;
+    return {first, last};
+}
 
 void selectMenu(){
     istringstream iss(lastCommand);
@@ -56,17 +66,9 @@ void displaySelectedMenu(){
 }
 
 void deleteMenus(){
-    DiagnosticPipe->DeletePipe();
-    cout << "Pipe fermée" << endl;
+    close_pipe();
     delete DiagnosticPipe;
     cout << "Pipe supprimée" << endl;
-
-    delete availableCommands;
-    cout << "Commandes supprimées" << endl;
-    delete locusteApps;
-    cout << "Applications disponibles supprimées" << endl;
-    delete menuFunction;
-    cout << "Menu supprimé" << endl;
 
 }
 
@@ -120,7 +122,7 @@ void close_pipe(){
     }
 }
 
-void list_modules(){
+void sendAction(){
     if(DiagnosticPipe->Initialized()){
         DiagnosticPipe->SetCommand(lastCommand);
     }  
@@ -130,7 +132,7 @@ void list_modules(){
 void initMenus(){
     DiagnosticPipe = new PipeHandler();
     menuFunction = new map<string, pfunc>();
-
+    helpMenu = new map<string,string>();
     (*menuFunction)["main"] = displayMainMenu;
     (*menuFunction)["locuste.service.brain"] = displayBrainMenu;
     (*menuFunction)["locuste.service.osm"] = displaySchedulerMenu;
@@ -139,25 +141,37 @@ void initMenus(){
     availableCommands = new map<string, map<string, pfunc>>();
     (*availableCommands)["main"] = {
         {"goto", selectMenu},
+        {"help", help},
+        
         {"quit", quit}
     };
     (*availableCommands)["locuste.service.brain"] = {
         {"goto", selectMenu},
+        {"help", help},
         {"connect", open_pipe},
         {"disconnect", close_pipe},
-        {"modules", list_modules},
+        {"module", sendAction},
         {"clear", clearScreenContent},
-    
         {"quit", quit}
     };
     (*availableCommands)["locuste.service.osm"] = {
         {"goto", selectMenu},
+        {"help", help},
         {"quit", quit}
     };
     (*availableCommands)["locuste.drone.automata"] = {
         {"goto", selectMenu},
+        {"help", help},
         {"quit", quit}
     };
+
+    (*helpMenu)["quit"] = "Quitter l'application";
+    (*helpMenu)["clear"] = "Nettoyer les journaux d'événements";
+    (*helpMenu)["goto"] = "Sélectionner un menu, ex: goto main, goto locuste.service.brain";
+    (*helpMenu)["connect"] = "Se connecter à l'application sélectionnée";
+    (*helpMenu)["disconnect"] = "Se déconnecter à l'application sélectionnée";
+    (*helpMenu)["module"] = "Choisir une action sur un module (list, start, stop, restart)";
+         
 }
 
 
@@ -171,4 +185,9 @@ void callCommand(){
 }
 
 
-
+void help(){
+    auto helpVector = split(lastCommand, " ");
+    if(helpVector.size() > 1){
+        selectedHelp = (*helpMenu)[helpVector[1]];
+    }
+}

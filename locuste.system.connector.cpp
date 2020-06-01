@@ -40,6 +40,7 @@ string lastCommand;
 map<string,int> *locusteApps;
 map<string,CommunicationPipe> *locusteAppPipes;
 mutex pid_lock;
+string selectedHelp = "";
 
 int main (int argc, const char * argv[]) {
     initPipeMaps();
@@ -60,12 +61,24 @@ int main (int argc, const char * argv[]) {
     }
 
     cout << "Arrêt en cours " << endl;
-    deleteMenus();
     cout << "Menus supprimés " << endl;
+    locusteAppPipes->clear();
     delete locusteAppPipes;
     cout << "Pipes supprimées " << endl;
+    screenContent->clear();
     delete screenContent;
     cout << "Journaux vidés " << endl;
+    locusteApps->clear();
+    delete locusteApps;
+    cout << "Applications disponibles supprimées" << endl;
+    deleteMenus();
+    availableCommands->clear();
+    delete availableCommands;
+    cout << "Commandes supprimées" << endl;
+    menuFunction->clear();
+    delete menuFunction;
+    cout << "Menu supprimé" << endl;
+
     return 0;
 }
 
@@ -100,8 +113,11 @@ void clear() {
 void displayHeader(){
     clear();
     cout << "Application de débuggage et diagnostic locuste.system.connector" << endl << endl;
+    
+    cout << "Dernière aide : " << selectedHelp << endl<< endl;
     cout << "Touche entrée pour valider, Retour arrière pour supprimer la lettre" << endl;
     cout << "Saisie : " << lastCommand  << endl << endl;
+    
 }
 
 void displayFooter(){

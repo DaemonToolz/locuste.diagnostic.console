@@ -81,9 +81,6 @@ bool PipeHandler::ClosePipe(){
     addScreenContent("Fermeture des pipes");
     if(this->_initialized){
         this->_initialized = false;
-        //this->tryClosePipe(this->_w_pipe);
-        //this->tryClosePipe(this->_r_pipe);
-
         return true;
     }
     return false;
@@ -103,17 +100,15 @@ void PipeHandler::tryClosePipe(const int& ref){
     }
 }
 
+// Cette section cause le freeze
 void PipeHandler::_p_read(){
-    
-    string output;
     addScreenContent("Démarrage de la lecture du flux entrant");
     while(this->_initialized){
-        char buffer[512]; 
-        
-        this->_r_pipe = open(this->_pipes.inputPipe.c_str(), O_RDONLY); 
+        this->_r_pipe = open(this->_pipes.inputPipe.c_str(), O_RDONLY);// | O_NONBLOCK); 
         try {
-            read(this->_r_pipe, buffer, 512); 
-            output = buffer;
+            char buffer[1024]; 
+            read(this->_r_pipe, buffer, 1024); 
+            string output = buffer;
             if(output.length() > 0){
                 addScreenContent(output);
             }
@@ -145,9 +140,9 @@ void PipeHandler::_p_write(){
                 break;
             } 
             this->tryClosePipe(this->_w_pipe);
-       } else {
-           this_thread::sleep_for(chrono::milliseconds(100));
-       }
+       } 
+        this_thread::sleep_for(chrono::milliseconds(100));
+       
     }
     addScreenContent("Arrêt de l'écriture du flux sortant");
     this->SetCommand("");

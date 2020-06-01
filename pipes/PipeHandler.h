@@ -7,6 +7,7 @@
 #include <mutex>
 
 namespace pipes{
+
     class PipeHandler {
         public:
             PipeHandler();

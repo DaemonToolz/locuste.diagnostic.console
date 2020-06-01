@@ -14,10 +14,13 @@ extern std::string lastCommand;
 extern std::string selectedMenuName;
 extern std::map<std::string,int> *locusteApps;
 extern std::map<std::string,std::map<std::string, pfunc>> *availableCommands;
+extern std::map<std::string,std::string> *helpMenu;
 extern std::map<std::string,CommunicationPipe> *locusteAppPipes;
-
+extern std::string selectedHelp;
 extern pipes::PipeHandler* DiagnosticPipe;
 extern std::mutex pid_lock;
+
+extern std::map<std::string,std::map<std::string, std::string>> *diagnosedSystemOverview;
 
 std::vector<std::string>* screenContent; 
 std::mutex sc_lock;
