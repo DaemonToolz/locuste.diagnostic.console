@@ -21,7 +21,7 @@ Tout le système est embarqué sur une carte Raspberry PI 4B+, Raspbian BUSTER.
 
 ![Vue globale](https://user-images.githubusercontent.com/6602774/83644783-f10a4d00-a5b1-11ea-8fed-80c3b76f1b00.png)
 
-Détail des choix techniques pour la partie Interface Graphique :
+Détail des choix techniques pour la partie Outil de diagnostique :
 
 * [C++] - L'intégration C/C++ permet d'avoir un contrôle accru sur les performances de l'application, bien que le Go n'utilise qu'une infime fraction de la RAM, le C++ reste néanmoins optimal. Chaque application utilisera 2 pipes : une d'entrée, une de sortie. 
 * [Named Pipe] - Utilisation des named pipe est une des façons les plus pratiques et rapide pour communique entre 2 processus
