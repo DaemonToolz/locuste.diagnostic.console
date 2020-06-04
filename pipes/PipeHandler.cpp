@@ -107,10 +107,12 @@ void PipeHandler::_p_read(){
         this->_r_pipe = open(this->_pipes.inputPipe.c_str(), O_RDONLY);// | O_NONBLOCK); 
         try {
             char buffer[1024]; 
-            read(this->_r_pipe, buffer, 1024); 
-            string output = buffer;
-            if(output.length() > 0){
-                addScreenContent(output);
+            int st = read(this->_r_pipe, buffer, 1024); 
+            if(st > 0){
+                string output = buffer;
+                if(output.length() > 0){
+                    addScreenContent(output);
+                }
             }
             this->tryClosePipe(this->_r_pipe);
             this_thread::sleep_for(chrono::milliseconds(100));

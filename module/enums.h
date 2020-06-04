@@ -6,7 +6,7 @@ namespace modules{
         MapScheduler = "Scheduler"
     }
 
-   enum SubSystem {
+    enum SubSystem {
 
     }
 }

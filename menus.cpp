@@ -8,6 +8,11 @@
 #include <iterator>
 #include <algorithm>
 #include <regex>
+#include <stdlib.h> 
+#include <sys/types.h>
+
+
+#include <signal.h>
 #include "./globals.h"
 #include "./pipes/PipeHandler.h"
 using namespace std; 
@@ -15,15 +20,20 @@ using namespace pipes;
 
 void close_pipe();
 void help();
+void clearAndCall();
+void callCommand();
 void displayBrainMenu();
 void displaySchedulerMenu();
 void displayMainMenu(); 
-
+void cursorUp();
+void cursorDown();
 void addScreenContent(const string& content);
 void readScreenContent();
 void clearScreenContent();
+
 typedef void (*pfunc)(void);
 
+map<int, pfunc>* authorizedKeys;
 map<string, pfunc> *menuFunction;
 string selectedMenuName = "main";
 map<string,map<string, pfunc>> *availableCommands;
@@ -44,6 +54,12 @@ int getch(void){
   return ch;
 }
 
+vector<string> splitInput(const string input){
+    istringstream iss(lastCommand);
+    vector<std::string> parsedMenu(istream_iterator<string>{iss}, istream_iterator<string>());
+    return parsedMenu;
+}
+
 std::vector<std::string> split(const string& input, const string& regex) {
     std::regex re(regex);
     std::sregex_token_iterator
@@ -53,9 +69,7 @@ std::vector<std::string> split(const string& input, const string& regex) {
 }
 
 void selectMenu(){
-    istringstream iss(lastCommand);
-    vector<std::string> parsedMenu(istream_iterator<string>{iss}, istream_iterator<string>());
-
+    auto parsedMenu = splitInput(lastCommand);
     if(parsedMenu.size() > 1 && menuFunction->find(parsedMenu[1]) != menuFunction->end()){
         selectedMenuName = parsedMenu[1];
     }
@@ -69,7 +83,8 @@ void deleteMenus(){
     close_pipe();
     delete DiagnosticPipe;
     cout << "Pipe supprimée" << endl;
-
+    delete authorizedKeys;
+    cout << "Raccourcis supprimés"  << endl;
 }
 
 
@@ -98,6 +113,10 @@ void displayMainMenu(){
             }
         }
         pid_lock.unlock();
+
+        cout << endl << "Début du journal d'événement" << endl;
+        readScreenContent();
+        cout << "Fin du journal" << endl << endl;
     }
 }
 
@@ -129,10 +148,50 @@ void sendAction(){
 }
 
 
+void startProcess(){
+    auto parsedCommand = splitInput(lastCommand);
+    
+    if(parsedCommand.size() > 1){
+        auto proc = locusteApps->find(parsedCommand[1]);
+        if(proc != locusteApps->end() && proc->second < 0){
+            try {
+                addScreenContent(("Tentative de démarrage de l'application " + proc->first));
+                std::stringstream ss;
+                // Le nom correspond au nom de projet + nom de l'exé (qui sont les mêmes)
+                ss << "/home/pi/Documents/locuste/locuste/" << proc->first << "/" << proc->first << "&";
+                // Find a way to spawn a new independant process
+            
+                ss.str(std::string());
+            } catch (exception& ex){
+                addScreenContent( ex.what());
+            }
+        }
+    }
+}
+
+void stopProcess(){
+    auto parsedCommand = splitInput(lastCommand);
+    
+    if(parsedCommand.size() > 1){
+        auto proc = locusteApps->find(parsedCommand[1]);
+        if(proc != locusteApps->end() && proc->second > 0){
+            try{
+                addScreenContent(("Arrêt en cours " + proc->first));
+                kill(proc->second, SIGINT);
+                addScreenContent(("Arrêt réussi " + proc->first));
+            } catch (exception& ex){
+                addScreenContent(ex.what());
+            }
+        }
+    }
+}
+
 void initMenus(){
     DiagnosticPipe = new PipeHandler();
     menuFunction = new map<string, pfunc>();
     helpMenu = new map<string,string>();
+    authorizedKeys = new map<int, pfunc>();
+
     (*menuFunction)["main"] = displayMainMenu;
     (*menuFunction)["locuste.service.brain"] = displayBrainMenu;
     (*menuFunction)["locuste.service.osm"] = displaySchedulerMenu;
@@ -142,7 +201,9 @@ void initMenus(){
     (*availableCommands)["main"] = {
         {"goto", selectMenu},
         {"help", help},
-        
+        {"clear", clearScreenContent},
+        {"start", startProcess},
+        {"stop", stopProcess},
         {"quit", quit}
     };
     (*availableCommands)["locuste.service.brain"] = {
@@ -171,9 +232,20 @@ void initMenus(){
     (*helpMenu)["connect"] = "Se connecter à l'application sélectionnée";
     (*helpMenu)["disconnect"] = "Se déconnecter à l'application sélectionnée";
     (*helpMenu)["module"] = "Choisir une action sur un module (list, start, stop, restart)";
-         
+    (*helpMenu)["start"] = "Permet de démarrer une des applications listée dans le menu principal";
+    (*helpMenu)["stop"] = "Permet de stopper une des applications listée dans le menu principal";
+    
+
+    (*authorizedKeys)[static_cast<int>('\n')] = clearAndCall;
+    (*authorizedKeys)[static_cast<int>('+')] = cursorDown;
+    (*authorizedKeys)[static_cast<int>('-')] = cursorUp;
+    
 }
 
+void clearAndCall(){
+    callCommand();
+    lastCommand = "";
+}
 
 void callCommand(){
     for (auto& elem : (*availableCommands)[selectedMenuName]) {

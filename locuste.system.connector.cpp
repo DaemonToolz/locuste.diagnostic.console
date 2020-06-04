@@ -39,6 +39,7 @@ bool running = true;
 string lastCommand;
 map<string,int> *locusteApps;
 map<string,CommunicationPipe> *locusteAppPipes;
+
 mutex pid_lock;
 string selectedHelp = "";
 
@@ -134,22 +135,34 @@ void displayFooter(){
     cout << endl;
 }
 
+bool isAuthorized(const char& input){
+    return authorizedKeys->find(static_cast<int>(input)) != authorizedKeys->end();
+}
+
+void callAuthorized(const char& input){
+    auto it = authorizedKeys->find(static_cast<int>(input));
+    if(it != authorizedKeys->end() && it->second != nullptr){
+        (it->second)();
+    }
+}
+
 void keyboardInput(){
     char lastChar; 
     while(running){
         lastChar = getch();
-        
-        if(lastChar < 32 && lastChar > 127) {
+        if((lastChar < 32 || lastChar > 127) && !isAuthorized(lastChar)) {
             continue;
         }
+
+        if(isAuthorized(lastChar)){
+            callAuthorized(lastChar);
+            continue;
+        } 
 
         if(lastChar == 127 || lastChar == 8) {
             if(lastCommand.length() > 0 ){
                 lastCommand.pop_back();
             }
-        } else if(lastChar == '\r' || lastChar == '\n' ){
-            callCommand();
-            lastCommand = "";
         } else {
             lastCommand.push_back(lastChar);
         }
