@@ -68,7 +68,7 @@ void clearScreenContent(){
 void cursorDown(){
     ln_lock.lock();
 
-    if(screenContent != nullptr && minLine < (uint)screenContent->size() - 21){
+    if(screenContent != nullptr && minLine < (uint)screenContent->size() - 20){
         minLine++;
         maxLine++;
     }
@@ -85,4 +85,13 @@ void cursorUp(){
     }
 
     ln_lock.unlock();
+}
+
+#include <regex>
+std::vector<std::string> split(const std::string& input, const std::string& regex) {
+    std::regex re(regex);
+    std::sregex_token_iterator
+        first{input.begin(), input.end(), re, -1},
+        last;
+    return {first, last};
 }

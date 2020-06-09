@@ -30,6 +30,7 @@ void cursorDown();
 void addScreenContent(const string& content);
 void readScreenContent();
 void clearScreenContent();
+vector<std::string> split(const string&, const string&) ;
 
 typedef void (*pfunc)(void);
 
@@ -60,13 +61,6 @@ vector<string> splitInput(const string input){
     return parsedMenu;
 }
 
-std::vector<std::string> split(const string& input, const string& regex) {
-    std::regex re(regex);
-    std::sregex_token_iterator
-        first{input.begin(), input.end(), re, -1},
-        last;
-    return {first, last};
-}
 
 void selectMenu(){
     auto parsedMenu = splitInput(lastCommand);

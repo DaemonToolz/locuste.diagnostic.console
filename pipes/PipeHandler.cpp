@@ -1,4 +1,7 @@
 #include "./PipeHandler.h"
+#include "../modules/enums.h"
+#include "../modules/DataParser.cpp"
+
 #include "../globals.h"
 #include <string.h>
 #include <atomic>
@@ -14,16 +17,18 @@
 #include <thread>
 
 using namespace pipes;
+using namespace std;
+using namespace modules;
 
-void addScreenContent();
+void addScreenContent(const std::string&);
 void readScreenContent();
 
 PipeHandler::PipeHandler(){
-
+    this->_parser = new DataParser();
 }
 
 PipeHandler::~PipeHandler(){
-
+    delete this->_parser;
 }
 
 bool PipeHandler::CreatePipe(const string &name){
@@ -100,6 +105,19 @@ void PipeHandler::tryClosePipe(const int& ref){
     }
 }
 
+void PipeHandler::_displayParsedData(){
+    ModuleStatus* output = this->_parser->Output();
+    if(output != nullptr){
+        for(auto index = 0; index < this->_parser->Available(); ++index){
+            ostringstream os;
+            os << "[" << output[index].Sys << "." << output[index].SubSys << "]." 
+                            << output[index].RawSys << " > " << output[index].RawSubSys << " : " 
+                            <<  (output[index].Running  ? "En cours d'exécution" : "Arrêté");
+            addScreenContent(os.str());
+        }
+    }
+}
+
 // Cette section cause le freeze
 void PipeHandler::_p_read(){
     addScreenContent("Démarrage de la lecture du flux entrant");
@@ -111,7 +129,8 @@ void PipeHandler::_p_read(){
             if(st > 0){
                 string output = buffer;
                 if(output.length() > 0){
-                    addScreenContent(output);
+                    this->_parser->Parse(output);
+                    this->_displayParsedData();
                 }
             }
             this->tryClosePipe(this->_r_pipe);

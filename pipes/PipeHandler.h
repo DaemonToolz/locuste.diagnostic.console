@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../models.h"
+#include "../modules/enums.h"
+#include "../modules/DataParser.h"
+
 #include <string.h>
 #include <atomic>
 #include <future>
@@ -20,6 +23,8 @@ namespace pipes{
             void SetCommand(const std::string&);
             bool Initialized();
         private:
+            modules::DataParser* _parser;
+
             std::atomic<bool> _initialized;
             std::atomic<bool> _onCommand;
             std::string _command;  
@@ -31,7 +36,7 @@ namespace pipes{
          
 
             std::future<void> _w_thread, _r_thread;
-
+            void _displayParsedData();
             void _p_read();
             void _p_write();
             void tryClosePipe(const int&);
