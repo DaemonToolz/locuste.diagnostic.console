@@ -1,8 +1,9 @@
 # locuste.system.connector
 LOCUSTE : Connecteur console pour des interactions directes avec les modules (Golang / Python)
 
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3cb9cb73d93843ecb62cd2951c60d37d)](https://www.codacy.com/manual/axel.maciejewski/locuste.system.connector?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DaemonToolz/locuste.system.connector&amp;utm_campaign=Badge_Grade)
+<img width="2609" alt="locuste-diagnostics-banner" src="https://user-images.githubusercontent.com/6602774/84285960-5c1dcb80-ab3e-11ea-9166-373c2500a8f2.png">
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/3cb9cb73d93843ecb62cd2951c60d37d)](https://www.codacy.com/manual/axel.maciejewski/locuste.system.connector?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=DaemonToolz/locuste.system.connector&amp;utm_campaign=Badge_Grade)
 
 Le project Locuste se divise en 4 grandes sections : 
 * Automate (Drone Automata) PYTHON (https://github.com/DaemonToolz/locuste.drone.automata)
