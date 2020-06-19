@@ -11,14 +11,21 @@ namespace modules{
             virtual ~DataParser();
             int           Available();
             ModuleStatus* Output();
-            ModuleStatus* Parse(const std::string&);
-            ModuleStatus* Parse();
+
+            bool Parse(const std::string&);
+            bool Parse();
+
+            void ExtractPipeMessage();
         protected:
         private:
             std::string _input;
+            std::string _r_input;
+            
             ModuleStatus* _output;
             int _available;
 
+            bool _modstt;
+            int _msg_sz; 
     };
 
 }

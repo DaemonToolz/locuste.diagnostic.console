@@ -128,10 +128,11 @@ void PipeHandler::_p_read(){
             int st = read(this->_r_pipe, buffer, 1024); 
             if(st > 0){
                 string output = buffer;
+                
                 if(output.length() > 0){
-                    this->_parser->Parse(output);
-                    this->_displayParsedData();
-                }
+                    bool r = this->_parser->Parse(output);
+                    if(r) this->_displayParsedData();
+                } 
             }
             this->tryClosePipe(this->_r_pipe);
             this_thread::sleep_for(chrono::milliseconds(100));
